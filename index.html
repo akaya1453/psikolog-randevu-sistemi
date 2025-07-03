@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Psikolog Randevu Formu</title>
+  <link rel="stylesheet" href="style/main.css" />
+</head>
+<body>
+  <h2>📅 Psikolog Randevusu Al</h2>
+  <form id="randevuForm">
+    <input type="text" id="adsoyad" placeholder="Ad Soyad" required />
+    <input type="text" id="iletisim" placeholder="Telefon veya E-posta" required />
+    <input type="date" id="tarih" required />
+    <div id="saatler"></div>
+    <input type="hidden" id="saat" />
+    <button type="submit">Randevu Al</button>
+    <div id="mesaj"></div>
+  </form>
+  <script src="scripts/main.js"></script>
+</body>
+</html>
