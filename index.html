@@ -1,22 +1,103 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Psikolog Randevu Formu</title>
-  <link rel="stylesheet" href="style/main.css" />
+  <meta charset="UTF-8">
+  <title>Psikolog Randevu Sistemi</title>
+  <style>
+    body { font-family: Arial; background: #f1f1f1; padding: 20px; }
+    form { background: white; padding: 20px; border-radius: 10px; max-width: 500px; margin: auto; box-shadow: 0 0 10px #ccc; }
+    input, button { width: 100%; padding: 10px; margin-top: 10px; font-size: 16px; }
+    .slot-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+    .slot-buttons button { flex: 1 0 30%; padding: 10px; background: #eee; border: none; border-radius: 5px; cursor: pointer; }
+    .slot-buttons button.selected { background: #4caf50; color: white; }
+    #successMsg { margin-top: 15px; color: green; font-weight: bold; display: none; }
+  </style>
 </head>
 <body>
-  <h2>📅 Psikolog Randevusu Al</h2>
-  <form id="randevuForm">
-    <input type="text" id="adsoyad" placeholder="Ad Soyad" required />
-    <input type="text" id="iletisim" placeholder="Telefon veya E-posta" required />
-    <input type="date" id="tarih" required />
-    <div id="saatler"></div>
-    <input type="hidden" id="saat" />
-    <button type="submit">Randevu Al</button>
-    <div id="mesaj"></div>
-  </form>
-  <script src="scripts/main.js"></script>
+
+<h2 style="text-align:center;">📅 Psikolog Randevusu</h2>
+
+<form id="randevuForm">
+  <input type="text" id="adsoyad" placeholder="Ad Soyad" required>
+  <input type="text" id="iletisim" placeholder="İletişim Bilgisi" required>
+  <input type="date" id="tarih" required>
+
+  <div id="saatSecimi">
+    <label><strong>Müsait Saatler:</strong></label>
+    <div class="slot-buttons" id="saatler"></div>
+  </div>
+
+  <input type="hidden" id="saat" required>
+  <button type="submit">Randevu Al</button>
+  <div id="successMsg">✅ Randevunuz başarıyla alındı!</div>
+</form>
+
+<script>
+  const endpoint = "https://script.google.com/macros/s/AKfycbyKd-XrPaP7bqvE08_7sRTPhSipxdzDaQVXwXG9fHESWfzOCka4ZNfa74OqKFr9Hr_cGQ/exec";
+  const saatler = ["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00"];
+
+  function saatleriYukle(tarih) {
+    const saatlerDiv = document.getElementById("saatler");
+    saatlerDiv.innerHTML = "";
+
+    const kullanilanSaatler = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith("randevu_")) {
+        const r = JSON.parse(localStorage.getItem(key));
+        if (r.tarih === tarih) {
+          kullanilanSaatler.push(r.saat);
+        }
+      }
+    }
+
+    saatler.forEach(saat => {
+      const btn = document.createElement("button");
+      btn.textContent = saat;
+      btn.type = "button";
+      btn.disabled = kullanilanSaatler.includes(saat);
+      btn.addEventListener("click", function () {
+        document.getElementById("saat").value = saat;
+        document.querySelectorAll(".slot-buttons button").forEach(b => b.classList.remove("selected"));
+        btn.classList.add("selected");
+      });
+      saatlerDiv.appendChild(btn);
+    });
+  }
+
+  document.getElementById("tarih").addEventListener("change", function () {
+    saatleriYukle(this.value);
+  });
+
+  document.getElementById("randevuForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    const veri = {
+      adsoyad: document.getElementById("adsoyad").value,
+      iletisim: document.getElementById("iletisim").value,
+      tarih: document.getElementById("tarih").value,
+      saat: document.getElementById("saat").value,
+      psikolog: "Otomatik Atanacak",
+      durum: "Bekliyor"
+    };
+
+    if (!veri.saat) {
+      alert("Lütfen bir saat seçiniz.");
+      return;
+    }
+
+    fetch(endpoint, {
+      method: "POST",
+      body: JSON.stringify(veri),
+      headers: { "Content-Type": "application/json" }
+    })
+    .then(res => res.text())
+    .then(msg => {
+      document.getElementById("successMsg").style.display = "block";
+      localStorage.setItem("randevu_" + Date.now(), JSON.stringify(veri));
+    })
+    .catch(err => alert("Bir hata oluştu: " + err.message));
+  });
+</script>
+
 </body>
 </html>
